@@ -42,7 +42,7 @@ def make_dataset_from_rlds(
     *,
     train: bool,
     standardize_fn: Optional[Callable[[dict], dict]] = None,
-    shuffle: bool = False,
+    shuffle: bool = True,
     image_obs_keys: Dict[str, Optional[str]] = {},
     depth_obs_keys: Dict[str, Optional[str]] = {},
     state_obs_keys: List[Optional[str]] = (),
@@ -182,7 +182,7 @@ def make_dataset_from_rlds(
         traj = {
             "observation": new_obs,
             "task": task,
-            "action": tf.cast(traj["action"], tf.float32),#tf.float64
+            "action": tf.cast(traj["action"], tf.float32),
             "dataset_name": tf.repeat(name, traj_len),
         }
 
@@ -236,7 +236,7 @@ def make_dataset_from_rlds(
     else:
         split = "train" if train else "val"
 
-    dataset = dl.DLataset.from_rlds(builder, split=split, shuffle=False, num_parallel_reads=num_parallel_reads)
+    dataset = dl.DLataset.from_rlds(builder, split=split, shuffle=shuffle, num_parallel_reads=num_parallel_reads)
 
     dataset = dataset.traj_map(restructure, num_parallel_calls)
     dataset = dataset.traj_map(
@@ -523,7 +523,8 @@ def make_interleaved_dataset(
     # Effective Dataset Length = Number of samples until each dataset has completed at least one epoch
     #   =>> Note :: Only counting the "primary" datasets (i.e., datasets with sample_weight == 1.0)
     dataset_len = int((np.array(dataset_sizes) / sample_weights)[primary_dataset_indices].max())
-
+    print(dataset_len)
+    print("dataset_length!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     # Allocate Threads based on Weights
     threads_per_dataset = allocate_threads(traj_transform_threads, sample_weights)
     reads_per_dataset = allocate_threads(traj_read_threads, sample_weights)
@@ -559,7 +560,7 @@ def make_interleaved_dataset(
         ).flatten(num_parallel_calls=threads)
         dataset = apply_per_dataset_frame_transforms(dataset, **dataset_frame_transform_kwargs)
         datasets.append(dataset)
-
+    print(dataset,'line563')
     # Interleave at the Frame Level
     dataset: dl.DLataset = dl.DLataset.sample_from_datasets(datasets, sample_weights)
 
@@ -569,6 +570,8 @@ def make_interleaved_dataset(
 
     # Shuffle the Dataset
     #   =>> IMPORTANT :: Shuffle AFTER .cache(), or else memory will still leak!
+    #dataset = dataset.shuffle(shuffle_buffer_size)
+
     # Apply Frame Transforms
     overwatch.info("Applying frame transforms on dataset...")
     dataset = apply_frame_transforms(dataset, **frame_transform_kwargs, train=train)

@@ -41,6 +41,8 @@ def get_train_strategy(
 ) -> TrainingStrategy:
     if train_strategy in TRAIN_STRATEGIES:
         strategy_cfg = TRAIN_STRATEGIES[train_strategy]
+        print(strategy_cfg)
+        print(strategy_cfg['cls'])
         strategy = strategy_cfg["cls"](
             vlm=vlm,
             device_id=device_id,

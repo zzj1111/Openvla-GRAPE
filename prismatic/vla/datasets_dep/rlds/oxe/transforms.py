@@ -81,8 +81,8 @@ def bridge_orig_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
         axis=1,
     )
     trajectory = relabel_bridge_actions(trajectory)
-    #trajectory["observation"]["EEF_state"] = trajectory["observation"]["state"][:, :6]
-    #trajectory["observation"]["gripper_state"] = trajectory["observation"]["state"][:, -1:]
+#    trajectory["observation"]["EEF_state"] = trajectory["observation"]["state"][:, :6]
+#    trajectory["observation"]["gripper_state"] = trajectory["observation"]["state"][:, -1:]
     return trajectory
 
 
@@ -391,18 +391,17 @@ def austin_buds_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def nyu_franka_play_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
-    # trajectory["observation"]["depth"] = tf.cast(trajectory["observation"]["depth"][..., 0], tf.float32)
-    # trajectory["observation"]["depth_additional_view"] = tf.cast(
-    #     trajectory["observation"]["depth_additional_view"][..., 0], tf.float32
-    # )
-    # trajectory["observation"]["eef_state"] = trajectory["observation"]["state"][:, -6:]
+    trajectory["observation"]["depth"] = tf.cast(trajectory["observation"]["depth"][..., 0], tf.float32)
+    trajectory["observation"]["depth_additional_view"] = tf.cast(
+        trajectory["observation"]["depth_additional_view"][..., 0], tf.float32
+    )
+    trajectory["observation"]["eef_state"] = trajectory["observation"]["state"][:, -6:]
 
     # clip gripper action, +1 = open, 0 = close
-    print(trajectory["action"])
     trajectory["action"] = tf.concat(
         (
-            trajectory["action"][:, -7:-1],
-            tf.clip_by_value(trajectory["action"][:, -1:], 0, 1),
+            trajectory["action"][:, -8:-2],
+            tf.clip_by_value(trajectory["action"][:, -2:-1], 0, 1),
         ),
         axis=-1,
     )
@@ -829,7 +828,7 @@ def tdroid_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
 OXE_STANDARDIZATION_TRANSFORMS = {
     "bridge_oxe": bridge_oxe_dataset_transform,
     "bridge_orig": bridge_orig_dataset_transform,
-    "rlds_np_rollout":  bridge_orig_dataset_transform,
+    "rlds_np_rollout": bridge_orig_dataset_transform,
     "bridge_dataset": bridge_orig_dataset_transform,
     "ppgm": ppgm_dataset_transform,
     "ppgm_static": ppgm_dataset_transform,

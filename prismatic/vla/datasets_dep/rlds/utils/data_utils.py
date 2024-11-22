@@ -61,6 +61,7 @@ class NormalizationType(str, Enum):
 def normalize_action_and_proprio(traj: Dict, metadata: Dict, normalization_type: NormalizationType):
     """Normalizes the action and proprio fields of a trajectory using the given metadata."""
     keys_to_normalize = {"action": "action", "proprio": "observation/proprio"}
+
     if normalization_type == NormalizationType.NORMAL:
         for key, traj_key in keys_to_normalize.items():
             mask = metadata[key].get("mask", tf.ones_like(metadata[key]["mean"], dtype=tf.bool))
@@ -73,6 +74,7 @@ def normalize_action_and_proprio(traj: Dict, metadata: Dict, normalization_type:
         return traj
 
     elif normalization_type in [NormalizationType.BOUNDS, NormalizationType.BOUNDS_Q99]:
+        tf.config.run_functions_eagerly(True)
         for key, traj_key in keys_to_normalize.items():
             if normalization_type == NormalizationType.BOUNDS:
                 low = metadata[key]["min"]
@@ -164,11 +166,10 @@ def rel2abs_gripper_actions(actions: tf.Tensor) -> tf.Tensor:
 # === Bridge-V2 =>> Dataset-Specific Transform ===
 def relabel_bridge_actions(traj: Dict[str, Any]) -> Dict[str, Any]:
     """Relabels actions to use reached proprioceptive state; discards last timestep (no-action)."""
-    print(traj['observation'])
-    #traj["observation"]["state"]=np.zeros((7,42),dtype=np.float32)
-    #movement_actions = traj["observation"]["state"][1:, :6] - traj["observation"]["state"][:-1, :6]
+    traj["observation"]["state"]=np.zeros((7,2),dtype=np.float32)
+    movement_actions = traj["observation"]["state"][1:, :6] - traj["observation"]["state"][:-1, :6]
     traj_truncated = tf.nest.map_structure(lambda x: x[:-1], traj)
-    #traj_truncated["action"] = tf.concat([movement_actions, traj["action"][:-1, -1:]], axis=1)
+    traj_truncated["action"] = tf.concat([movement_actions, traj["action"][:-1, -1:]], axis=1)
 
     return traj_truncated
 
@@ -278,18 +279,14 @@ def save_dataset_statistics(dataset_statistics, run_dir):
     with open(out_path, "w") as f_json:
         for _, stats in dataset_statistics.items():
             for k in stats["action"].keys():
-                if isinstance(stats["action"][k], np.ndarray):
-                    stats["action"][k] = stats["action"][k].tolist()
+                stats["action"][k] = stats["action"][k].tolist()
             if "proprio" in stats:
                 for k in stats["proprio"].keys():
-                    if isinstance(stats["proprio"][k], np.ndarray):
-                        stats["proprio"][k] = stats["proprio"][k].tolist()
+                    stats["proprio"][k] = stats["proprio"][k].tolist()
             if "num_trajectories" in stats:
-                if isinstance(stats["num_trajectories"], np.ndarray):
-                    stats["num_trajectories"] = stats["num_trajectories"].item()
+                stats["num_trajectories"] = stats["num_trajectories"].item()
             if "num_transitions" in stats:
-                if isinstance(stats["num_transitions"], np.ndarray):
-                    stats["num_transitions"] = stats["num_transitions"].item()
+                stats["num_transitions"] = stats["num_transitions"].item()
         json.dump(dataset_statistics, f_json, indent=2)
     overwatch.info(f"Saved dataset statistics file at path {out_path}")
 
