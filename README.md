@@ -128,7 +128,7 @@ conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvi
 
 # Clone and install the openvla repo
 git clone git@github.com:zzj1111/Openvla-GRAPE.git
-cd openvla
+cd Openvla-GRAPE
 pip install -e .
 
 # Install Flash Attention 2 for training (https://github.com/Dao-AILab/flash-attention)
