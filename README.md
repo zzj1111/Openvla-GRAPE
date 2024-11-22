@@ -127,7 +127,7 @@ conda activate openvla
 conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia -y  # UPDATE ME!
 
 # Clone and install the openvla repo
-git clone git@github.com:zzj1111/Openvla-GRAPE.git
+git clone https://github.com/zzj1111/Openvla-GRAPE.git
 cd Openvla-GRAPE
 pip install -e .
 
